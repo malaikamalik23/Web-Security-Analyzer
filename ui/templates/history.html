@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scan History</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; background: #f5f5f5; }
+        h1 { color: #222; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #eee; }
+        a { color: #2563eb; }
+        .score-good { color: #16a34a; font-weight: bold; }
+        .score-medium { color: #ca8a04; font-weight: bold; }
+        .score-bad { color: #dc2626; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Scan History</h1>
+    <p><a href="/">&larr; Back to scanner</a></p>
+
+    <table>
+        <tr>
+            <th>Date</th>
+            <th>URL</th>
+            <th>Score</th>
+            <th>Findings</th>
+        </tr>
+        {% for s in scans %}
+        <tr>
+            <td>{{ s.scan_date }}</td>
+            <td><a href="/history/{{ s.id }}">{{ s.url }}</a></td>
+            <td class="{% if s.score >= 80 %}score-good{% elif s.score >= 50 %}score-medium{% else %}score-bad{% endif %}">
+                {{ s.score }}/100
+            </td>
+            <td>{{ s.findings | length }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Security Analyzer</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; background: #f5f5f5; }
+        h1 { color: #222; }
+        form { margin-bottom: 30px; }
+        input[type=text] { width: 400px; padding: 8px; }
+        button { padding: 8px 16px; background: #2563eb; color: white; border: none; cursor: pointer; }
+        .score { font-size: 2em; font-weight: bold; margin-bottom: 10px; }
+        .score.good { color: #16a34a; }
+        .score.medium { color: #ca8a04; }
+        .score.bad { color: #dc2626; }
+        .download-link { margin-bottom: 20px; display: inline-block; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background: #eee; }
+        .severity-High { color: #dc2626; font-weight: bold; }
+        .severity-Medium { color: #ca8a04; font-weight: bold; }
+        .severity-Low { color: #16a34a; font-weight: bold; }
+        details { cursor: pointer; }
+        details summary { color: #2563eb; }
+    </style>
+</head>
+<body>
+    <h1>Web Security Analyzer</h1>
+    <p><a href="/history">View Scan History</a> | <a href="/examples">See Example Scans</a></p>
+    <p>Enter a URL you own or are authorized to test.</p>
+
+    <form method="POST">
+       <textarea name="urls" rows="4" style="width: 500px; padding: 8px;" placeholder="example.com&#10;github.com&#10;reddit.com" required>{{ url }}</textarea><br><br>
+       <button type="submit">Scan</button>
+    </form>
+
+{% if error_message %}
+    <p style="color: #dc2626; font-weight: bold;">{{ error_message }}</p>
+{% endif %}
+
+{% if all_results %}
+    {% for scan in all_results %}
+        <h2>{{ scan.url }}</h2>
+       <div class="score {% if scan.score >= 80 %}good{% elif scan.score >= 50 %}medium{% else %}bad{% endif %}">
+    Security Score: {{ scan.score }}/100
+        </div>
+        {% if scan.previous_score is not none %}
+        {% set diff = scan.score - scan.previous_score %}
+             <p style="margin-top: -10px; color: {% if diff > 0 %}#16a34a{% elif diff < 0 %}#dc2626{% else %}#6b7280{% endif %};">
+        {% if diff > 0 %}&#9650; Improved by {{ diff }} points since last scan (was {{ scan.previous_score }})
+        {% elif diff < 0 %}&#9660; Dropped by {{ diff|abs }} points since last scan (was {{ scan.previous_score }})
+        {% else %}No change since last scan ({{ scan.previous_score }})
+        {% endif %}
+    </p>
+{% endif %}
+        <a class="download-link" href="/download-report?url={{ scan.url }}">Download PDF Report</a>
+
+        <table>
+            <tr>
+                <th>Finding</th>
+                <th>Severity</th>
+                <th>Category</th>
+                <th>Confidence</th>
+            </tr>
+            {% for r in scan.results %}
+            <tr>
+                <td>
+                    <details>
+                        <summary>{{ r.header }}</summary>
+                        <pre style="white-space: pre-wrap;">{{ r.explanation }}</pre>
+                    </details>
+                </td>
+                <td class="severity-{{ r.severity }}">{{ r.severity }}</td>
+                <td>{{ r.category }}</td>
+                <td>{{ r.confidence }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <hr style="margin: 30px 0;">
+    {% endfor %}
+{% endif %}
+</body>
+</html>
